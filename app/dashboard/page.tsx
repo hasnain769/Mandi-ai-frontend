@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-
 import { api } from '@/lib/api';
+import { InventoryCard } from '@/components/InventoryCard';
+import { SalesRegister } from '@/components/SalesRegister';
 
 interface InventoryItem {
     id: number;
@@ -15,28 +16,45 @@ interface InventoryItem {
     last_updated: string;
 }
 
+interface Transaction {
+    id: string;
+    transaction_type: 'SALE' | 'PURCHASE' | 'ADJUSTMENT';
+    item_name: string;
+    quantity: number;
+    unit: string;
+    rate?: number;
+    total_amount?: number;
+    buyer_name?: string;
+    created_at: string;
+}
+
 export default function Dashboard() {
     const [user, setUser] = useState<User | null>(null);
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+
     const router = useRouter();
 
-    const fetchInventory = async (phoneNumber: string) => {
+    const fetchDashboardData = useCallback(async (phoneNumber: string) => {
         try {
+            setLoading(true);
             const data = await api.dashboard.get(phoneNumber);
-            if (data.inventory) {
-                setInventory(data.inventory);
-            }
+            if (data.inventory) setInventory(data.inventory);
+            if (data.transactions) setTransactions(data.transactions);
         } catch (error) {
-            console.error("Failed to fetch inventory", error);
+            console.error("Failed to fetch dashboard", error);
+        } finally {
+            setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUser(user);
                 if (user.phoneNumber) {
-                    fetchInventory(user.phoneNumber);
+                    fetchDashboardData(user.phoneNumber);
                 }
             } else {
                 router.push('/');
@@ -44,66 +62,81 @@ export default function Dashboard() {
         });
 
         return () => unsubscribe();
-    }, [router, fetchInventory]);
+    }, [router, fetchDashboardData]);
 
     const handleSignOut = async () => {
         await signOut(auth);
         router.push('/');
     };
 
+    // Calculate Cash in Hand (Simulated from transactions)
+    const cashInHand = transactions
+        .filter(t => t.transaction_type === 'SALE' && t.total_amount)
+        .reduce((sum, t) => sum + (t.total_amount || 0), 0);
+
     return (
-        <div className="min-h-screen bg-gray-50 p-8">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-800">Mandi Dashboard</h1>
-                    {user && (
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-600">{user.phoneNumber}</span>
-                            <button
-                                onClick={handleSignOut}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                            >
-                                Sign Out
-                            </button>
+        <div className="min-h-screen bg-gray-50 pb-20">
+            {/* Header */}
+            <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10">
+                <div className="max-w-4xl mx-auto flex justify-between items-center">
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-900">Mandi Ledger</h1>
+                        {user && <p className="text-xs text-gray-500">{user.phoneNumber}</p>}
+                    </div>
+                    <button
+                        onClick={handleSignOut}
+                        className="text-sm text-red-600 font-medium hover:underline"
+                    >
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto p-4 space-y-8">
+
+                {/* 1. Cash Summary */}
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
+                    <p className="text-green-100 text-sm font-medium mb-1">Today's Sales (Estimated)</p>
+                    <h2 className="text-4xl font-extrabold tracking-tight">
+                        Rs {cashInHand.toLocaleString()}
+                    </h2>
+                </div>
+
+                {/* 2. Inventory Grid (Visual) */}
+                <div>
+                    <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        📦 Current Stock
+                    </h2>
+
+                    {loading ? (
+                        <div className="text-center py-10 text-gray-400">Loading stock...</div>
+                    ) : inventory.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {inventory.map((item) => (
+                                <InventoryCard
+                                    key={item.id}
+                                    item_name={item.item_name}
+                                    quantity={item.quantity}
+                                    unit={item.unit}
+                                    last_updated={item.last_updated}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white p-8 rounded-xl border-dashed border-2 border-gray-200 text-center text-gray-400">
+                            No stock items found.
                         </div>
                     )}
                 </div>
 
-                <div className="bg-white rounded-lg shadow overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="p-4 font-semibold text-gray-600">Item Name</th>
-                                <th className="p-4 font-semibold text-gray-600">Quantity</th>
-                                <th className="p-4 font-semibold text-gray-600">Unit</th>
-                                <th className="p-4 font-semibold text-gray-600">Last Updated</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {inventory.length > 0 ? (
-                                inventory.map((item) => (
-                                    <tr key={item.id} className="border-t">
-                                        <td className="p-4">{item.item_name}</td>
-                                        <td className="p-4">{item.quantity}</td>
-                                        <td className="p-4">{item.unit}</td>
-                                        <td className="p-4 text-gray-500 text-sm">
-                                            {new Date(item.last_updated).toLocaleString()}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr className="border-t">
-                                    <td colSpan={4} className="p-4 text-center text-gray-500">
-                                        No items found. Send a voice note to add stock!
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                    <div className="p-4 text-center text-gray-500 italic">
-                        Voice updates will appear here in real-time.
-                    </div>
+                {/* 3. Sales Register (Ledger) */}
+                <div>
+                    <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        📜 Recent Transactions
+                    </h2>
+                    <SalesRegister transactions={transactions} />
                 </div>
+
             </div>
         </div>
     );
