@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { InventoryCard } from '@/components/InventoryCard';
 import { SalesRegister } from '@/components/SalesRegister';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { useTranslation, Locale } from '@/lib/i18n';
 
 interface InventoryItem {
     id: number;
@@ -33,6 +35,10 @@ export default function Dashboard() {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [locale, setLocale] = useState<Locale>('en'); // Default English
+
+    // Translation Helper
+    const t = useTranslation(locale);
 
     const router = useRouter();
 
@@ -77,26 +83,30 @@ export default function Dashboard() {
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
             {/* Header */}
-            <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10">
+            <div className="bg-white border-b border-gray-200 p-4 sticky top-0 z-10 transition-colors">
                 <div className="max-w-4xl mx-auto flex justify-between items-center">
                     <div>
-                        <h1 className="text-xl font-bold text-gray-900">Mandi Ledger</h1>
+                        <h1 className="text-xl font-bold text-gray-900">{t.title}</h1>
                         {user && <p className="text-xs text-gray-500">{user.phoneNumber}</p>}
                     </div>
-                    <button
-                        onClick={handleSignOut}
-                        className="text-sm text-red-600 font-medium hover:underline"
-                    >
-                        Sign Out
-                    </button>
+
+                    <div className="flex items-center gap-4">
+                        <LanguageToggle currentLocale={locale} onToggle={setLocale} />
+                        <button
+                            onClick={handleSignOut}
+                            className="text-sm text-red-600 font-medium hover:underline"
+                        >
+                            {t.signOut}
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div className="max-w-4xl mx-auto p-4 space-y-8">
 
                 {/* 1. Cash Summary */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
-                    <p className="text-green-100 text-sm font-medium mb-1">Today's Sales (Estimated)</p>
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-md">
+                    <p className="text-green-100 text-sm font-medium mb-1">{t.cashInHand}</p>
                     <h2 className="text-4xl font-extrabold tracking-tight">
                         Rs {cashInHand.toLocaleString()}
                     </h2>
@@ -105,11 +115,11 @@ export default function Dashboard() {
                 {/* 2. Inventory Grid (Visual) */}
                 <div>
                     <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        📦 Current Stock
+                        📦 {t.stockHeader}
                     </h2>
 
                     {loading ? (
-                        <div className="text-center py-10 text-gray-400">Loading stock...</div>
+                        <div className="text-center py-10 text-gray-400">{t.loading}</div>
                     ) : inventory.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {inventory.map((item) => (
@@ -124,7 +134,7 @@ export default function Dashboard() {
                         </div>
                     ) : (
                         <div className="bg-white p-8 rounded-xl border-dashed border-2 border-gray-200 text-center text-gray-400">
-                            No stock items found.
+                            {t.noStock}
                         </div>
                     )}
                 </div>
@@ -132,7 +142,7 @@ export default function Dashboard() {
                 {/* 3. Sales Register (Ledger) */}
                 <div>
                     <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        📜 Recent Transactions
+                        📜 {t.transactionsHeader}
                     </h2>
                     <SalesRegister transactions={transactions} />
                 </div>
