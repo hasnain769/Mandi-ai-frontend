@@ -31,5 +31,35 @@ export const api = {
             if (!res.ok) throw new Error("Failed to fetch dashboard");
             return res.json();
         }
+    },
+    inventory: {
+        update: async (id: number, data: any, phoneNumber: string) => {
+            await fetch(`${API_URL}/api/inventory/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Phone-Number': phoneNumber },
+                body: JSON.stringify(data)
+            });
+        },
+        delete: async (id: number, phoneNumber: string) => {
+            await fetch(`${API_URL}/api/inventory/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-Phone-Number': phoneNumber }
+            });
+        }
+    },
+    transactions: {
+        update: async (id: string, data: any, phoneNumber: string) => {
+            await fetch(`${API_URL}/api/transactions/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Phone-Number': phoneNumber },
+                body: JSON.stringify(data)
+            });
+        },
+        delete: async (id: string, phoneNumber: string) => {
+            await fetch(`${API_URL}/api/transactions/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-Phone-Number': phoneNumber }
+            });
+        }
     }
 };

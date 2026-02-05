@@ -19,7 +19,12 @@ export const dictionary = {
         rate: "Rate",
         total: "Total",
         action: "Action",
-        time: "Time"
+        time: "Time",
+        edit: "Edit",
+        delete: "Delete",
+        save: "Save",
+        cancel: "Cancel",
+        confirmDelete: "Are you sure you want to delete this?"
     },
     ur: {
         title: "Mandi Khata",
@@ -39,7 +44,12 @@ export const dictionary = {
         rate: "Rate",
         total: "Total",
         action: "Amal",
-        time: "Waqt"
+        time: "Waqt",
+        edit: "Tabdeel",
+        delete: "Hatayein",
+        save: "Mehfooz",
+        cancel: "Wapis",
+        confirmDelete: "Kya aap waqai isay hatana chahte hain?"
     }
 };
 

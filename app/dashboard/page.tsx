@@ -125,10 +125,14 @@ export default function Dashboard() {
                             {inventory.map((item) => (
                                 <InventoryCard
                                     key={item.id}
+                                    id={item.id} // NEW: Pass ID
                                     item_name={item.item_name}
                                     quantity={item.quantity}
                                     unit={item.unit}
                                     last_updated={item.last_updated}
+                                    phoneNumber={user?.phoneNumber || ''} // NEW: Pass Phone
+                                    locale={locale} // NEW: Pass Locale
+                                    onUpdate={() => user?.phoneNumber && fetchDashboardData(user.phoneNumber)} // NEW: Refresh
                                 />
                             ))}
                         </div>
@@ -144,7 +148,12 @@ export default function Dashboard() {
                     <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                         📜 {t.transactionsHeader}
                     </h2>
-                    <SalesRegister transactions={transactions} />
+                    <SalesRegister
+                        transactions={transactions}
+                        phoneNumber={user?.phoneNumber || ''}
+                        locale={locale}
+                        onUpdate={() => user?.phoneNumber && fetchDashboardData(user.phoneNumber)}
+                    />
                 </div>
 
             </div>
