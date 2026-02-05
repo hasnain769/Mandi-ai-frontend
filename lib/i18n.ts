@@ -24,7 +24,9 @@ export const dictionary = {
         delete: "Delete",
         save: "Save",
         cancel: "Cancel",
-        confirmDelete: "Are you sure you want to delete this?"
+        confirmDelete: "Are you sure you want to delete this?",
+        tabInventory: "Inventory",
+        tabSales: "Sales"
     },
     ur: {
         title: "Mandi Khata",
@@ -49,7 +51,9 @@ export const dictionary = {
         delete: "Hatayein",
         save: "Mehfooz",
         cancel: "Wapis",
-        confirmDelete: "Kya aap waqai isay hatana chahte hain?"
+        confirmDelete: "Kya aap waqai isay hatana chahte hain?",
+        tabInventory: "Maal (Stock)",
+        tabSales: "Khata (Sales)"
     }
 };
 
