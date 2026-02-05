@@ -7,7 +7,7 @@ import { api } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+92 ');
   const [verificationId, setVerificationId] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
