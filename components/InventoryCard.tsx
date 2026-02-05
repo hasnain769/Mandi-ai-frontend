@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { getVeggieIcon } from '@/lib/veggieIcons';
 import { EditModal } from '@/components/EditModal';
 import { api } from '@/lib/api';
-import { useTranslation, Locale } from '@/lib/i18n';
 
 interface InventoryCardProps {
     id: number;
@@ -11,12 +10,10 @@ interface InventoryCardProps {
     unit: string;
     last_updated: string;
     phoneNumber: string;
-    locale: Locale;
     onUpdate: () => void;
 }
 
-export const InventoryCard: React.FC<InventoryCardProps> = ({ id, item_name, quantity, unit, last_updated, phoneNumber, locale, onUpdate }) => {
-    const t = useTranslation(locale);
+export const InventoryCard: React.FC<InventoryCardProps> = ({ id, item_name, quantity, unit, last_updated, phoneNumber, onUpdate }) => {
     const [isEditOpen, setIsEditOpen] = useState(false);
 
     // Determine low stock (simple logic: < 10)
@@ -38,7 +35,7 @@ export const InventoryCard: React.FC<InventoryCardProps> = ({ id, item_name, qua
     };
 
     const handleDelete = async () => {
-        if (confirm(t.confirmDelete)) {
+        if (confirm("Are you sure you want to delete this?")) {
             try {
                 await api.inventory.delete(id, phoneNumber);
                 onUpdate();
@@ -57,10 +54,10 @@ export const InventoryCard: React.FC<InventoryCardProps> = ({ id, item_name, qua
             `}>
                 {/* Actions (Hidden by default, visible on hover/focus) */}
                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => setIsEditOpen(true)} className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200" title={t.edit}>
+                    <button onClick={() => setIsEditOpen(true)} className="p-1.5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200" title="Edit">
                         ✏️
                     </button>
-                    <button onClick={handleDelete} className="p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200" title={t.delete}>
+                    <button onClick={handleDelete} className="p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200" title="Delete">
                         🗑️
                     </button>
                 </div>
@@ -76,18 +73,18 @@ export const InventoryCard: React.FC<InventoryCardProps> = ({ id, item_name, qua
                 </div>
 
                 <p className="text-xs text-gray-400 mt-4">
-                    {t.updated}: {new Date(last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    Updated: {new Date(last_updated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
             </div>
 
             <EditModal
                 isOpen={isEditOpen}
-                title={`${t.edit} ${item_name}`}
+                title={`Edit ${item_name}`}
                 onClose={() => setIsEditOpen(false)}
                 onSave={handleSave}
                 fields={[
-                    { name: 'item_name', label: t.item, type: 'text', value: item_name },
-                    { name: 'quantity', label: t.qty, type: 'number', value: quantity },
+                    { name: 'item_name', label: "Item", type: 'text', value: item_name },
+                    { name: 'quantity', label: "Quantity", type: 'number', value: quantity },
                     { name: 'unit', label: 'Unit', type: 'text', value: unit },
                 ]}
             />

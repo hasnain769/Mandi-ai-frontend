@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { getVeggieIcon } from '@/lib/veggieIcons';
 import { EditModal } from '@/components/EditModal';
 import { api } from '@/lib/api';
-import { useTranslation, Locale } from '@/lib/i18n';
 
 interface Transaction {
     id: string;
@@ -19,12 +18,10 @@ interface Transaction {
 interface SalesRegisterProps {
     transactions: Transaction[];
     phoneNumber: string;
-    locale: Locale;
     onUpdate: () => void;
 }
 
-export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phoneNumber, locale, onUpdate }) => {
-    const t = useTranslation(locale);
+export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phoneNumber, onUpdate }) => {
     const [editTx, setEditTx] = useState<Transaction | null>(null);
 
     const handleSave = async (data: any) => {
@@ -34,8 +31,7 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
                 buyer_name: data.buyer_name,
                 quantity: parseFloat(data.quantity),
                 rate: parseFloat(data.rate),
-                // Recalculate total on server OR client. Sending scalar values, server should re-calc total if logic exists, 
-                // but our simple DB update just saves values. Ideally total_amount should be calc here too.
+                // Recalculate total
                 total_amount: parseFloat(data.quantity) * parseFloat(data.rate || 0)
             }, phoneNumber);
             onUpdate();
@@ -47,7 +43,7 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
     };
 
     const handleDelete = async (id: string) => {
-        if (confirm(t.confirmDelete)) {
+        if (confirm("Are you sure you want to delete this?")) {
             try {
                 await api.transactions.delete(id, phoneNumber);
                 onUpdate();
@@ -59,7 +55,7 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
     };
 
     if (transactions.length === 0) {
-        return <div className="text-gray-400 text-center py-8">{t.noTransactions}</div>;
+        return <div className="text-gray-400 text-center py-8">No transactions yet.</div>;
     }
 
     return (
@@ -69,12 +65,12 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
                     <table className="min-w-full text-left text-sm whitespace-nowrap">
                         <thead className="uppercase tracking-wider border-b-2 border-gray-100 bg-gray-50 text-gray-500 font-semibold">
                             <tr>
-                                <th scope="col" className="px-6 py-4">{t.time}</th>
-                                <th scope="col" className="px-6 py-4">{t.action}</th>
-                                <th scope="col" className="px-6 py-4">{t.item}</th>
-                                <th scope="col" className="px-6 py-4 text-right">{t.qty}</th>
-                                <th scope="col" className="px-6 py-4 text-right">{t.rate}</th>
-                                <th scope="col" className="px-6 py-4 text-right bg-blue-50/50">{t.total}</th>
+                                <th scope="col" className="px-6 py-4">Time</th>
+                                <th scope="col" className="px-6 py-4">Action</th>
+                                <th scope="col" className="px-6 py-4">Item</th>
+                                <th scope="col" className="px-6 py-4 text-right">Qty</th>
+                                <th scope="col" className="px-6 py-4 text-right">Rate</th>
+                                <th scope="col" className="px-6 py-4 text-right bg-blue-50/50">Total</th>
                                 <th scope="col" className="px-6 py-4 text-right">⚙️</th>
                             </tr>
                         </thead>
@@ -93,11 +89,11 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
                                         <td className="px-6 py-4">
                                             {isSale ? (
                                                 <span className="inline-flex items-center gap-1.5 py-1 px-2 rounded-lg text-xs font-medium bg-red-100 text-red-700 border border-red-200">
-                                                    ⬇️ {t.soldTo} <span className="font-bold ml-1">{tx.buyer_name || 'Counter'}</span>
+                                                    ⬇️ Sold to <span className="font-bold ml-1">{tx.buyer_name || 'Counter'}</span>
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1.5 py-1 px-2 rounded-lg text-xs font-medium bg-green-100 text-green-700 border border-green-200">
-                                                    ⬆️ {t.stockIn}
+                                                    ⬆️ Stock In
                                                 </span>
                                             )}
                                         </td>
@@ -120,8 +116,8 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
 
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => setEditTx(tx)} className="text-blue-500 hover:text-blue-700" title={t.edit}>✏️</button>
-                                                <button onClick={() => handleDelete(tx.id)} className="text-red-500 hover:text-red-700" title={t.delete}>🗑️</button>
+                                                <button onClick={() => setEditTx(tx)} className="text-blue-500 hover:text-blue-700" title="Edit">✏️</button>
+                                                <button onClick={() => handleDelete(tx.id)} className="text-red-500 hover:text-red-700" title="Delete">🗑️</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -136,13 +132,13 @@ export const SalesRegister: React.FC<SalesRegisterProps> = ({ transactions, phon
             {editTx && (
                 <EditModal
                     isOpen={true}
-                    title={`${t.edit} ${t.action}`}
+                    title="Edit Transaction"
                     onClose={() => setEditTx(null)}
                     onSave={handleSave}
                     fields={[
                         { name: 'buyer_name', label: 'Buyer Name', type: 'text', value: editTx.buyer_name || '' },
-                        { name: 'quantity', label: t.qty, type: 'number', value: editTx.quantity },
-                        { name: 'rate', label: t.rate, type: 'number', value: editTx.rate || 0 },
+                        { name: 'quantity', label: 'Quantity', type: 'number', value: editTx.quantity },
+                        { name: 'rate', label: 'Rate', type: 'number', value: editTx.rate || 0 },
                     ]}
                 />
             )}
